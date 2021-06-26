@@ -69,6 +69,7 @@ function(_get_common_flags out_compiler_flags out_linker_flags)
             # Probably too noisy :(
             # -Wsuggest-attribute=pure
             # -Wsuggest-attribute=const
+            "-Wmissing-declarations" # Having global functions that aren't private to file or inline without declaring them previously (usually in the header). Avoids typos
         )
     endif()
 	
@@ -76,6 +77,7 @@ function(_get_common_flags out_compiler_flags out_linker_flags)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		set(compiler_flags
 			"-Wparentheses" # Doing weird stuff in conditionals where precendence might not be clear or when there are side-effects
+            "-Wmissing-prototypes" # Like -Wmissing-declarations from gcc
 		)
 	endif()
 

@@ -63,22 +63,22 @@ endfunction()
 function(_conan_install name)
 	set(options DYNAMIC_MSVC_RUNTIME)
 	set(one_value_args DESTINATION RECIPE_FILE PROFILE PROFILE_HOST PROFILE_BUILD)
-	set(multi_value_args EXTRA_SETTINGS)
+	set(multi_value_args EXTRA_SETTINGS OPTIONS OPTIONS_HOST OPTIONS_BUILD)
 	cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 	if (arg_UNPARSED_ARGUMENTS)
 		message(FATAL_ERROR "Unrecognized arguments: ${arg_UNPARSED_ARGUMENTS}")
 	endif()
-
+	
 	# Don't process recipe if it has already been processed
 	file(SHA1 "${arg_RECIPE_FILE}" recipe_hash)
-	if(DEFINED conan_${name}_recipe_hash
-		AND recipe_hash STREQUAL conan_${name}_recipe_hash
+	if(DEFINED CONAN_${name}_recipe_hash
+		AND recipe_hash STREQUAL CONAN_${name}_recipe_hash
 		AND EXISTS "${arg_DESTINATION}"
 	)
 		message(STATUS "Skipping conan for ${arg_RECIPE_FILE} because it didn't change")
 		return()
 	endif()
-	unset(conan_${name}_recipe_hash CACHE)
+	unset(CONAN_${name}_recipe_hash CACHE)
 
 	message(STATUS "Running conan for: ${arg_RECIPE_FILE}")
 
@@ -119,28 +119,54 @@ function(_conan_install name)
 			set(msvc_runtime_value)
 		endif()
 
+		if (DEFINED arg_OPTIONS)
+			set(arg_OPTIONS "OPTIONS" ${arg_OPTIONS})
+		else()
+			set(arg_OPTIONS)
+		endif()
+
+		if (DEFINED arg_OPTIONS_HOST)
+			set(arg_OPTIONS_HOST "OPTIONS_HOST" ${arg_OPTIONS_HOST})
+		else()
+			set(arg_OPTIONS_HOST)
+		endif()
+
+		if (DEFINED arg_OPTIONS_BUILD)
+			set(arg_OPTIONS_BUILD "OPTIONS_BUILD" ${arg_OPTIONS_BUILD})
+		else()
+			set(arg_OPTIONS_BUILD)
+		endif()
+
 		conan_cmake_install(
 			PATH_OR_REFERENCE "${arg_RECIPE_FILE}"
 			GENERATOR "${conan_generator}"
 			BUILD "missing"
 			INSTALL_FOLDER "${install_dir}"
+			${arg_OPTIONS}
+			${arg_OPTIONS_HOST}
+			${arg_OPTIONS_BUILD}
 			${profile_or_settings}
 			SETTINGS ${arg_EXTRA_SETTINGS} ${msvc_runtime_value}
 		)
 	endforeach()
 
 	# Write hash of the processed recipe to cache
-	set(conan_${name}_recipe_hash "${recipe_hash}"
-		CACHE INTERNAL "Hash of the ${name} recipe" FORCE)
+	set(CONAN_${name}_recipe_hash "${recipe_hash}"
+		CACHE STRING "Hash of the ${name} conan recipe. Delete me to force re-run" FORCE)
 endfunction()
 
 function(conan_run)
-	if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py")
-		set(recipe_file "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py")
-	elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.txt")
-		set(recipe_file "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.txt")
+	if(EXISTS "${PROJECT_SOURCE_DIR}/conanfile.py")
+		if (EXISTS "${PROJECT_SOURCE_DIR}/conanfile.txt")
+			message(FATAL_ERROR "Both conanfile.py and conanfile.txt exist in ${PROJECT_SOURCE_DIR}/. Please merge them into one")
+			return()
+		endif()
+		
+		set(recipe_file "${PROJECT_SOURCE_DIR}/conanfile.py")
+	elseif(EXISTS "${PROJECT_SOURCE_DIR}/conanfile.txt")
+		set(recipe_file "${PROJECT_SOURCE_DIR}/conanfile.txt")
 	else()
-		message(FATAL_ERROR "No conanfile.txt/conanfile.py found in ${CMAKE_CURRENT_SOURCE_DIR}")
+		message(FATAL_ERROR "No conanfile.txt/conanfile.py found in ${PROJECT_SOURCE_DIR}")
 		return()
 	endif()
 
@@ -164,4 +190,13 @@ function(conan_run)
 	set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE PARENT_SCOPE)
 	set(CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH} "${project_conan_module_dir}" PARENT_SCOPE)
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${project_conan_module_dir}" PARENT_SCOPE)
+endfunction()
+
+function(add_conan_bool_option_to_list out_options_list bool_option option_name)
+	if (${bool_option})
+		list(APPEND ${out_options_list} "${option_name}=True")
+	else()
+		list(APPEND ${out_options_list} "${option_name}=False")
+	endif()
+	set(${out_options_list} ${${out_options_list}} PARENT_SCOPE)
 endfunction()

@@ -70,15 +70,19 @@ function(_conan_install name)
 	endif()
 	
 	# Don't process recipe if it has already been processed
-	file(SHA1 "${arg_RECIPE_FILE}" recipe_hash)
-	if(DEFINED CONAN_${name}_recipe_hash
-		AND recipe_hash STREQUAL CONAN_${name}_recipe_hash
-		AND EXISTS "${arg_DESTINATION}"
-	)
-		message(STATUS "Skipping conan for ${arg_RECIPE_FILE} because it didn't change")
-		return()
+	file(TIMESTAMP "${arg_RECIPE_FILE}" recipe_last_write_time)
+	if (recipe_last_write_time STREQUAL "")
+		message(WARNING "Cannot obtain last write time for file: \"${arg_RECIPE_FILE}\". Can't detect whether it was changed, so conan will be run")
+	else()
+		if(DEFINED CONAN_${name}_recipe_last_write_time
+			AND recipe_last_write_time STREQUAL CONAN_${name}_recipe_last_write_time
+			AND EXISTS "${arg_DESTINATION}"
+		)
+			message(STATUS "Skipping conan for ${arg_RECIPE_FILE} because it didn't change")
+			return()
+		endif()
 	endif()
-	unset(CONAN_${name}_recipe_hash CACHE)
+	unset(CONAN_${name}_recipe_last_write_time CACHE)
 
 	message(STATUS "Running conan for: ${arg_RECIPE_FILE}")
 
@@ -151,8 +155,8 @@ function(_conan_install name)
 	endforeach()
 
 	# Write hash of the processed recipe to cache
-	set(CONAN_${name}_recipe_hash "${recipe_hash}"
-		CACHE STRING "Hash of the ${name} conan recipe. Delete me to force re-run" FORCE)
+	set(CONAN_${name}_recipe_last_write_time "${recipe_last_write_time}"
+		CACHE STRING "Last write time of the ${name} conan recipe. Delete me to force re-run" FORCE)
 endfunction()
 
 function(conan_run)

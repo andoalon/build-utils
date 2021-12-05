@@ -61,7 +61,7 @@ function(_conan_get_profile_or_settings
 endfunction()
 
 function(_conan_install name)
-	set(options DYNAMIC_MSVC_RUNTIME)
+	set(options)
 	set(one_value_args DESTINATION RECIPE_FILE PROFILE PROFILE_HOST PROFILE_BUILD)
 	set(multi_value_args EXTRA_SETTINGS OPTIONS OPTIONS_HOST OPTIONS_BUILD)
 	cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
@@ -126,15 +126,6 @@ function(_conan_install name)
 	foreach(config ${configurations})
 		_conan_get_profile_or_settings("${config}" "${arg_PROFILE}" "${arg_PROFILE_HOST}" "${arg_PROFILE_BUILD}" profile_or_settings)
 
-		if (MSVC AND NOT "${arg_DYNAMIC_MSVC_RUNTIME}")
-			set(msvc_runtime_value "compiler.runtime=MT")
-			if (config STREQUAL "Debug")
-				string(APPEND msvc_runtime_value "d")
-			endif()
-		else()
-			set(msvc_runtime_value)
-		endif()
-
 		if (DEFINED arg_OPTIONS)
 			set(arg_OPTIONS "OPTIONS" ${arg_OPTIONS})
 		else()
@@ -162,7 +153,7 @@ function(_conan_install name)
 			${arg_OPTIONS_HOST}
 			${arg_OPTIONS_BUILD}
 			${profile_or_settings}
-			SETTINGS ${arg_EXTRA_SETTINGS} ${msvc_runtime_value}
+			SETTINGS ${arg_EXTRA_SETTINGS}
 		)
 	endforeach()
 

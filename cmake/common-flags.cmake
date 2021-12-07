@@ -29,6 +29,14 @@ function(_get_common_flags out_compiler_flags out_linker_flags)
             "/w14640" # '_instance_' : construction of local static object is not thread-safe https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4640?view=vs-2019
         )
 
+        if (CMAKE_GENERATOR MATCHES "^Visual Studio")
+            # Enable multi-core compilation.
+            # We only want to do it if using msbuild, since
+            # ninja and other build systems do parallel builds
+            # at the build system level
+            list(APPEND compiler_flags "/MP")
+        endif()
+
         set(linker_flags
             "/IGNORE:4099" # Missing .pdb file
         )

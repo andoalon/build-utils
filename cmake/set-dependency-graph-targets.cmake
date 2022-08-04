@@ -24,25 +24,18 @@ set(GRAPHVIZ_IGNORE_TARGETS\n\
 )\n"
         )
     endif()
-
-    if (conan_executable)
-        set(conan_generate_graphviz COMMAND conan info "${CMAKE_SOURCE_DIR}" "--graph=${CMAKE_BINARY_DIR}/graphs/conan-dependencies.dot")
-        set(conan_generate_graphviz_images COMMAND conan info "${CMAKE_SOURCE_DIR}" "--graph=${CMAKE_BINARY_DIR}/graphs/images/conan-dependencies.html")
-    endif()
 endif()
 
 add_custom_target("graphviz"
     COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_BINARY_DIR}/graphs"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/graphs"
     COMMAND "${CMAKE_COMMAND}" "--graphviz=graphs/${PROJECT_NAME}.dot" "${CMAKE_SOURCE_DIR}"
-    ${conan_generate_graphviz}
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     VERBATIM
 )
 
 add_custom_target("graphviz-images"
     COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_BINARY_DIR}/graphs/images"
-    ${conan_generate_graphviz_images}
     COMMAND "${CMAKE_COMMAND}" "-Dgraph_files_dir=${CMAKE_BINARY_DIR}/graphs" -P "${CMAKE_CURRENT_LIST_DIR}/convert-dependency-graphs-to-images.cmake"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/graphs"
     VERBATIM
@@ -54,6 +47,3 @@ set_target_properties("graphviz-images" "graphviz"
     PROPERTIES
         FOLDER "dependency-graphs"
 )
-
-unset(conan_generate_graphviz)
-unset(conan_generate_graphviz_images)

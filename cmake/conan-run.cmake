@@ -49,8 +49,8 @@ function(_conan_get_profile_or_settings
 			_conan_get_profile_arg("${profile}" "SETTINGS" "${config}" profile_arg)
 			set(profile_or_settings PROFILE ${profile_arg} PARENT_SCOPE)
 		else()
-			_conan_get_profile_arg("${profile_host}" "SETTINGS_HOST" "${config}" profile_host_arg)
-			_conan_get_profile_arg("${profile_build}" "SETTINGS_BUILD" "${config}" profile_build_arg)
+			_conan_get_profile_arg("${profile_host}" "PROFILE_HOST" "${config}" profile_host_arg)
+			_conan_get_profile_arg("${profile_build}" "PROFILE_BUILD" "${config}" profile_build_arg)
 
 			set(profile_or_settings PROFILE_HOST ${profile_host_arg} PROFILE_BUILD ${profile_build_arg} PARENT_SCOPE)
 		endif()

@@ -56,7 +56,7 @@ function(_conan_get_profile_or_settings
 		endif()
 	else()
 		conan_cmake_autodetect(conan_autodetected_settings BUILD_TYPE "${config}")
-		set(profile_or_settings SETTINGS ${conan_autodetected_settings} PARENT_SCOPE)
+		set(profile_or_settings SETTINGS_HOST ${conan_autodetected_settings} SETTINGS_BUILD ${conan_autodetected_settings} PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -112,14 +112,12 @@ function(_conan_install name)
 		endif()
 
 		set(configurations ${CMAKE_CONFIGURATION_TYPES})
-		set(conan_generator "cmake_find_package_multi")
 	else()
 		if (NOT CMAKE_BUILD_TYPE)	
 			message(FATAL_ERROR "Please set a value for CMAKE_BUILD_TYPE (e.g. `set(CMAKE_BUILD_TYPE \"Debug\")`)")
 		endif()
 
 		set(configurations ${CMAKE_BUILD_TYPE})
-		set(conan_generator "cmake_find_package")
 	endif()
 
 	# Install dependencies for each configuration
@@ -146,14 +144,14 @@ function(_conan_install name)
 
 		conan_cmake_install(
 			PATH_OR_REFERENCE "${arg_RECIPE_FILE}"
-			GENERATOR "${conan_generator}"
+			GENERATOR "CMakeDeps"
 			BUILD "missing"
 			INSTALL_FOLDER "${install_dir}"
 			${arg_OPTIONS}
 			${arg_OPTIONS_HOST}
 			${arg_OPTIONS_BUILD}
 			${profile_or_settings}
-			SETTINGS ${arg_EXTRA_SETTINGS}
+			SETTINGS_HOST ${arg_EXTRA_SETTINGS} SETTINGS_BUILD ${arg_EXTRA_SETTINGS}
 		)
 	endforeach()
 

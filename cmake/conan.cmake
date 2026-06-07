@@ -55,10 +55,18 @@ function(_get_msvc_ide_version result)
         set(${result} 15 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1920 AND MSVC_VERSION VERSION_LESS 1930)
         set(${result} 16 PARENT_SCOPE)
-    elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1940)
+    # Visual Studio 2022 version 17.0 starts at 1930, but actually on version 17.10
+    # the go as far as version 1940 and as of writing this they are at 17.14 which uses 1944.
+    # That's why this case in inconsistent with the rest (you expected we would check `VERSION_LESS 1940`)
+    # https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170
+    #
+    # In the page linked above they also say that
+    # "Starting with Visual Studio 2026, MSVC versioning is decoupled from Visual Studio versioning"
+    # so... that makes this code's future uncertain
+    elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1950)
         set(${result} 17 PARENT_SCOPE)
     else()
-        message(FATAL_ERROR "Conan: Unknown MSVC compiler version [${MSVC_VERSION}]")
+        message(FATAL_ERROR "Conan: Unknown MSVC compiler version [${MSVC_VERSION}]. The script needs to be updated")
     endif()
 endfunction()
 

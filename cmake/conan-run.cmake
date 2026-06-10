@@ -61,7 +61,7 @@ function(_conan_get_profile_or_settings
 endfunction()
 
 function(_conan_install name)
-	set(options)
+	set(options REVISIONS_ENABLED) # Runs conan with `CONAN_REVISIONS_ENABLED=1` in the environment
 	set(one_value_args DESTINATION RECIPE_FILE PROFILE PROFILE_HOST PROFILE_BUILD)
 	set(multi_value_args EXTRA_SETTINGS OPTIONS OPTIONS_HOST OPTIONS_BUILD)
 	cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
@@ -142,6 +142,10 @@ function(_conan_install name)
 			set(arg_OPTIONS_BUILD)
 		endif()
 
+		if (arg_REVISIONS_ENABLED)
+			set(prev_CONAN_REVISIONS_ENABLED $ENV{CONAN_REVISIONS_ENABLED})
+			set(ENV{CONAN_REVISIONS_ENABLED} 1)
+		endif()
 		conan_cmake_install(
 			PATH_OR_REFERENCE "${arg_RECIPE_FILE}"
 			GENERATOR "CMakeDeps"
@@ -153,6 +157,9 @@ function(_conan_install name)
 			${profile_or_settings}
 			SETTINGS_HOST ${arg_EXTRA_SETTINGS} SETTINGS_BUILD ${arg_EXTRA_SETTINGS}
 		)
+		if (arg_REVISIONS_ENABLED)
+			set(ENV{CONAN_REVISIONS_ENABLED} ${prev_CONAN_REVISIONS_ENABLED})
+		endif()
 	endforeach()
 
 	# Write hash of the processed recipe to cache
